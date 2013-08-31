@@ -38,7 +38,7 @@ import com.google.common.base.Objects;
  * Created on 17/01/13
  * @author d.serdiuk
  */
-final class LocalDateIntervalImpl implements LocalDateInterval {
+final public class LocalDateIntervalImpl implements LocalDateInterval {
     private final LocalDate first;
     private final LocalDate last;
     private final int days;
