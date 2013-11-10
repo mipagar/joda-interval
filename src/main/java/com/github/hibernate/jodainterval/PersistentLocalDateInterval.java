@@ -19,6 +19,7 @@ import com.github.serddmitry.jodainterval.LocalDateInterval;
 import com.github.serddmitry.jodainterval.LocalDateIntervalImpl;
 import com.github.serddmitry.jodainterval.LocalDateIntervals;
 import java.io.Serializable;
+import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -40,7 +41,7 @@ public class PersistentLocalDateInterval implements CompositeUserType, Serializa
 
     private static final String[] PROPERTY_NAMES = new String[] { "first", "last" };
 
-    private static final Type[] TYPES = new Type[] { StandardBasicTypes.TIMESTAMP, StandardBasicTypes.TIMESTAMP };
+    private static final Type[] TYPES = new Type[] { StandardBasicTypes.DATE, StandardBasicTypes.DATE };
 
     public Object assemble(Serializable cached, SessionImplementor session, Object owner) throws HibernateException {
         return cached;
@@ -75,7 +76,7 @@ public class PersistentLocalDateInterval implements CompositeUserType, Serializa
     @Override
     public Object getPropertyValue(Object component, int property) throws HibernateException {
         LocalDateInterval interval = (LocalDateInterval) component;
-        return (property == 0) ? interval.getFirst().toDate() : interval.getLast().toDate();
+        return (property == 0) ? interval.getFirst().toDateTimeAtStartOfDay().toDate() : interval.getLast().toDateTimeAtStartOfDay().toDate();
     }
 
     public int hashCode(Object x) throws HibernateException {
@@ -103,17 +104,17 @@ public class PersistentLocalDateInterval implements CompositeUserType, Serializa
     public void nullSafeSet(PreparedStatement statement, Object value, int index, SessionImplementor session)
             throws HibernateException, SQLException {
         if (value == null) {
-            statement.setNull(index, StandardBasicTypes.TIMESTAMP.sqlType());
-            statement.setNull(index + 1, StandardBasicTypes.TIMESTAMP.sqlType());
+            statement.setNull(index, StandardBasicTypes.DATE.sqlType());
+            statement.setNull(index + 1, StandardBasicTypes.DATE.sqlType());
             return;
         }
         LocalDateInterval interval = (LocalDateInterval) value;
-        statement.setTimestamp(index, asTimeStamp(interval.getFirst()));
-        statement.setTimestamp(index + 1, asTimeStamp(interval.getLast()));
+        statement.setDate(index, asDate(interval.getFirst()));
+        statement.setDate(index + 1, asDate(interval.getLast()));
     }
-
-    private Timestamp asTimeStamp(LocalDate localDate) {
-        return new Timestamp(localDate.toDateTimeAtStartOfDay(DateTimeZone.UTC).getMillis());
+   
+    private Date asDate(LocalDate localDate) {
+        return new Date(localDate.toDateTimeAtStartOfDay(DateTimeZone.UTC).getMillis());
     }
 
     public Object replace(Object original, Object target, SessionImplementor session, Object owner)

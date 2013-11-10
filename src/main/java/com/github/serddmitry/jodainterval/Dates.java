@@ -17,6 +17,7 @@
 package com.github.serddmitry.jodainterval;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import org.joda.time.LocalDate;
 
 import org.joda.time.ReadableInstant;
 import org.joda.time.ReadablePartial;
@@ -38,7 +39,7 @@ public class Dates {
     public static <T extends ReadablePartial> T earlier(T date1, T date2) {
         checkNotNull(date1, "cannot get earlier of two dates if first date is null");
         checkNotNull(date2, "cannot get earlier of two dates if second date is null");
-        return date1.compareTo(date2) <= 0 ? date1 : date2;
+        return compareTo(date1, date2) <= 0 ? date1 : date2;
     }
 
     /**
@@ -48,7 +49,7 @@ public class Dates {
     public static <T extends ReadablePartial> T later(T date1, T date2) {
         checkNotNull(date1, "cannot get later of two dates if first date is null");
         checkNotNull(date2, "cannot get later of two dates if second date is null");
-        return date1.compareTo(date2) >= 0? date1: date2;
+        return compareTo(date1, date2) >= 0? date1: date2;
     }
 
     /**
@@ -70,4 +71,15 @@ public class Dates {
         checkNotNull(date2, "cannot get later of two dates if second date is null");
         return date1.compareTo(date2) >= 0? date1: date2;
     }
+    
+    private static int compareTo(ReadablePartial o1, ReadablePartial o2) {
+        // override to perform faster
+        if (01 == 02) {
+            return 0;
+        }
+        
+        LocalDate ld1 = (LocalDate) o1;
+        LocalDate ld2 = (LocalDate) o2;
+        return ld1.toDateTimeAtStartOfDay().compareTo(ld2.toDateTimeAtStartOfDay());
+    }        
 }
