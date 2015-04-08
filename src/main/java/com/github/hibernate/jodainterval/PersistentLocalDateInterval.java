@@ -16,118 +16,69 @@
 package com.github.hibernate.jodainterval;
 
 import com.github.serddmitry.jodainterval.LocalDateInterval;
-import com.github.serddmitry.jodainterval.LocalDateIntervalImpl;
 import com.github.serddmitry.jodainterval.LocalDateIntervals;
-import java.io.Serializable;
-import java.sql.Date;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Timestamp;
-import org.hibernate.HibernateException;
-import org.hibernate.engine.SessionImplementor;
-import org.hibernate.type.StandardBasicTypes;
-import org.hibernate.type.Type;
-import org.hibernate.usertype.CompositeUserType;
-import org.joda.time.DateTimeZone;
+import org.hibernate.usertype.ParameterizedType;
+import org.jadira.usertype.dateandtime.joda.columnmapper.DateColumnLocalDateMapper;
+import org.jadira.usertype.spi.shared.AbstractParameterizedMultiColumnUserType;
+import org.jadira.usertype.spi.shared.ColumnMapper;
+import org.jadira.usertype.spi.shared.IntegratorConfiguredType;
 import org.joda.time.LocalDate;
-import org.joda.time.contrib.hibernate.PersistentLocalDate;
 
 /**
  *
  * @author duncan
  */
-public class PersistentLocalDateInterval implements CompositeUserType, Serializable {
+public class PersistentLocalDateInterval extends AbstractParameterizedMultiColumnUserType<LocalDateInterval> implements ParameterizedType, IntegratorConfiguredType {
 
     private static final String[] PROPERTY_NAMES = new String[] { "first", "last" };
 
-    private static final Type[] TYPES = new Type[] { StandardBasicTypes.DATE, StandardBasicTypes.DATE };
+//    private static final Type[] TYPES = new Type[] { StandardBasicTypes.DATE, StandardBasicTypes.DATE };
 
-    public Object assemble(Serializable cached, SessionImplementor session, Object owner) throws HibernateException {
-        return cached;
-    }
+    private static final DateColumnLocalDateMapper[] COLUMN_MAPPERS = new DateColumnLocalDateMapper[] { new DateColumnLocalDateMapper(), new DateColumnLocalDateMapper() };
 
-    public Object deepCopy(Object value) throws HibernateException {
-        return value;
-    }
-
-    public Serializable disassemble(Object value, SessionImplementor session) throws HibernateException {
-        return (Serializable) value;
-    }
-
-    public boolean equals(Object x, Object y) throws HibernateException {
-        if (x == y) {
-            return true;
-        }
-        if (x == null || y == null) {
-            return false;
-        }
-        return x.equals(y);
-    }
 
     public String[] getPropertyNames() {
         return PROPERTY_NAMES;
     }
 
-    public Type[] getPropertyTypes() {
-        return TYPES;
+//    @Override
+//    public Object getPropertyValue(Object component, int property) throws HibernateException {
+//        LocalDateInterval interval = (LocalDateInterval) component;
+//        return (property == 0) ? interval.getFirst().toDateTimeAtStartOfDay().toDate() : interval.getLast().toDateTimeAtStartOfDay().toDate();
+//    }
+
+//    public void nullSafeSet(PreparedStatement statement, Object value, int index, SessionImplementor session)
+//            throws HibernateException, SQLException {
+//        if (value == null) {
+//            statement.setNull(index, StandardBasicTypes.DATE.sqlType());
+//            statement.setNull(index + 1, StandardBasicTypes.DATE.sqlType());
+//            return;
+//        }
+//        LocalDateInterval interval = (LocalDateInterval) value;
+//        statement.setDate(index, asDate(interval.getFirst()));
+//        statement.setDate(index + 1, asDate(interval.getLast()));
+//    }
+
+//    @Override
+//    public Class returnedClass() {
+//        return LocalDateIntervalImpl.class;
+//    } 
+
+    @Override
+    protected ColumnMapper<?, ?>[] getColumnMappers() {
+        return COLUMN_MAPPERS;
     }
 
     @Override
-    public Object getPropertyValue(Object component, int property) throws HibernateException {
-        LocalDateInterval interval = (LocalDateInterval) component;
-        return (property == 0) ? interval.getFirst().toDateTimeAtStartOfDay().toDate() : interval.getLast().toDateTimeAtStartOfDay().toDate();
-    }
+    protected LocalDateInterval fromConvertedColumns(Object[] convertedColumns) {
+        LocalDate begin = (LocalDate) convertedColumns[0];
+        LocalDate end = (LocalDate) convertedColumns[1];
 
-    public int hashCode(Object x) throws HibernateException {
-        return x.hashCode();
-    }
-
-    public boolean isMutable() {
-        return false;
-    }
-
-    public Object nullSafeGet(ResultSet resultSet, String[] names, SessionImplementor session, Object owner)
-            throws HibernateException, SQLException {
-        if (resultSet == null) {
-            return null;
-        }
-        PersistentLocalDate pst = new PersistentLocalDate();
-        LocalDate start = (LocalDate) pst.nullSafeGet(resultSet, names[0]);
-        LocalDate end = (LocalDate) pst.nullSafeGet(resultSet, names[1]);
-        if (start == null || end == null) {
-            return null;
-        }
-        return LocalDateIntervals.includingLast(start, end);
-    }
-
-    public void nullSafeSet(PreparedStatement statement, Object value, int index, SessionImplementor session)
-            throws HibernateException, SQLException {
-        if (value == null) {
-            statement.setNull(index, StandardBasicTypes.DATE.sqlType());
-            statement.setNull(index + 1, StandardBasicTypes.DATE.sqlType());
-            return;
-        }
-        LocalDateInterval interval = (LocalDateInterval) value;
-        statement.setDate(index, asDate(interval.getFirst()));
-        statement.setDate(index + 1, asDate(interval.getLast()));
-    }
-   
-    private Date asDate(LocalDate localDate) {
-        return new Date(localDate.toDateTimeAtStartOfDay(DateTimeZone.UTC).getMillis());
-    }
-
-    public Object replace(Object original, Object target, SessionImplementor session, Object owner)
-            throws HibernateException {
-        return original;
+        return LocalDateIntervals.includingLast(begin, end);
     }
 
     @Override
-    public Class returnedClass() {
-        return LocalDateIntervalImpl.class;
+    protected Object[] toConvertedColumns(LocalDateInterval value) {
+        return new Object[] { value.getFirst(), value.getLast() };
     }
-
-    public void setPropertyValue(Object component, int property, Object value) throws HibernateException {
-        throw new UnsupportedOperationException("Immutable LocalInterval");
-    }    
 }
